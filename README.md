@@ -1,113 +1,79 @@
 # Secure Tasks API
 
-## Descripción del proyecto
+Proyecto Spring Boot con:
+- usuarios y tareas guardados en base de datos H2
+- validación de email, contraseña y título de tarea
+- contraseñas almacenadas con hash BCrypt
+- tests automáticos con MockMvc
 
-Secure Tasks API es una API REST desarrollada en Java con Spring Boot que permite gestionar tareas de forma sencilla.
+## Endpoints
 
-El objetivo del proyecto es construir una base funcional aplicando conceptos básicos de desarrollo seguro (S-SDLC), incluyendo autenticación futura, control de acceso, validación de datos y logging.
+### Healthcheck
+- `GET /health`
 
-Actualmente, la API permite crear y consultar tareas en memoria.
+### Auth
+- `POST /auth/register`
+- `POST /auth/login`
 
+### Tasks
+- `GET /tasks`
+- `POST /tasks`
 
-## Tecnologías utilizadas
+## Ejemplos JSON
 
-* Java 17
-* Spring Boot
-* Maven
-* Thunder Client / Postman (para pruebas)
-
-
-## Ejecutar en local
-
-1. Clonar el repositorio:
-
-```bash
-git clone https://github.com/Celia115/secure-tasks-api.git
+### Registro
+```json
+{
+  "email": "celia@email.com",
+  "password": "Password1!"
+}
 ```
 
-2. Entrar en la carpeta del proyecto:
-
-```bash
-cd secure-tasks-api
+### Login
+```json
+{
+  "email": "celia@email.com",
+  "password": "Password1!"
+}
 ```
 
-3. Ejecutar la aplicación:
-
-```bash
-mvn spring-boot:run
+### Crear tarea
+```json
+{
+  "title": "Preparar memoria final"
+}
 ```
 
-4. Acceder en el navegador:
+## Ejecución
 
-```text
-http://localhost:8080
-```
-
-
-## Ejecutar tests
-
-Ejecutar los tests con Maven:
-
+### 1. Ejecutar tests
 ```bash
 mvn test
 ```
 
-
-## Endpoints disponibles
-
-### Healthcheck
-
-* GET `/health`
-
-Comprueba que la API está funcionando correctamente.
-
-Ejemplo de respuesta:
-
-```json
-{
-  "status": "ok"
-}
+### 2. Arrancar la aplicación
+```bash
+mvn spring-boot:run
 ```
 
-### Obtener tareas
+### 3. Probar la API
+- Health: `http://localhost:8080/health`
+- Consola H2: `http://localhost:8080/h2-console`
 
-* GET `/tasks`
+Datos de conexión H2:
+- JDBC URL: `jdbc:h2:file:./data/securetasksdb`
+- User: `sa`
+- Password: dejar vacío
 
-Devuelve la lista de tareas.
+## Qué cambia respecto al proyecto original
 
-Ejemplo:
+Antes:
+- usuarios y tareas en listas en memoria
+- contraseñas en texto plano
+- sin persistencia al reiniciar
 
-```json
-[]
-```
-
-
-### Crear tarea
-
-* POST `/tasks`
-
-Permite crear una nueva tarea.
-
-Ejemplo de petición:
-
-```json
-{
-  "id": 1,
-  "title": "Estudiar Spring"
-}
-```
-
-Ejemplo de respuesta:
-
-```json
-{
-  "id": 1,
-  "title": "Estudiar Spring"
-}
-```
-
-## Notas
-
-* Las tareas se almacenan en memoria (no base de datos).
-* Si se reinicia la aplicación, los datos se pierden.
-* Este proyecto es una base inicial para aplicar buenas prácticas de seguridad en futuras fases.
+Ahora:
+- persistencia en base de datos
+- contraseñas con hash
+- validación automática con Bean Validation
+- tests de validación y persistencia

@@ -1,16 +1,27 @@
 package com.celia.securetasksapi;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+})
 public class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 150)
     private String email;
+
+    @Column(nullable = false, length = 100)
     private String password;
 
     public User() {
     }
 
-    public User(Long id, String email, String password) {
-        this.id = id;
+    public User(String email, String password) {
         this.email = email;
         this.password = password;
     }

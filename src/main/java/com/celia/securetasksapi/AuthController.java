@@ -1,68 +1,52 @@
 package com.celia.securetasksapi;
 
+import com.celia.securetasksapi.dto.LoginRequest;
+import com.celia.securetasksapi.dto.RegisterRequest;
+import com.celia.securetasksapi.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final List<User> users = new ArrayList<>();
-    private Long nextId = 1L;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request) {
+        String cleanEmail = request.getEmail().trim().toLowerCase();
 
-        if (request.getEmail() == null || request.getPassword() == null
-                || request.getEmail().isBlank() || request.getPassword().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Datos inválidos"));
-        }
-
-        boolean exists = users.stream()
-                .anyMatch(user -> user.getEmail().equalsIgnoreCase(request.getEmail()));
-
-        if (exists) {
+        if (userRepository.existsByEmailIgnoreCase(cleanEmail)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "El usuario ya existe"));
         }
 
-        User user = new User(nextId++, request.getEmail(), request.getPassword());
-        users.add(user);
+        User user = new User(cleanEmail, passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("message", "Usuario registrado correctamente"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request) {
+        String cleanEmail = request.getEmail().trim().toLowerCase();
 
-        if (request.getEmail() == null || request.getPassword() == null
-                || request.getEmail().isBlank() || request.getPassword().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Datos inválidos"));
-        }
-
-        Optional<User> userFound = users.stream()
-                .filter(user -> user.getEmail().equalsIgnoreCase(request.getEmail()))
-                .findFirst();
-
-        if (userFound.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Credenciales inválidas"));
-        }
-
-        User user = userFound.get();
-
-        if (!user.getPassword().equals(request.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Credenciales inválidas"));
-        }
-
-        return ResponseEntity.ok(Map.of("message", "Login correcto"));
+        return userRepository.findByEmailIgnoreCase(cleanEmail)
+                .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
+                .map(user -> ResponseEntity.ok(Map.of("message", "Login correcto")))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Credenciales inválidas")));
     }
 }

@@ -1,5 +1,7 @@
 package com.celia.securetasksapi;
 
+import com.celia.securetasksapi.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +20,14 @@ class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        userRepository.deleteAll();
+    }
+
     @Test
     void registerShouldWork() throws Exception {
         mockMvc.perform(post("/auth/register")
@@ -25,7 +35,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "celia@email.com",
-                                  "password": "123456"
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -39,7 +49,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "test@email.com",
-                                  "password": "abc123"
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isCreated());
@@ -49,7 +59,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "test@email.com",
-                                  "password": "abc123"
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -63,7 +73,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "wrong@email.com",
-                                  "password": "abc123"
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isCreated());
@@ -73,7 +83,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "wrong@email.com",
-                                  "password": "mala"
+                                  "password": "OtraClave1!"
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
@@ -87,7 +97,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "noexiste@email.com",
-                                  "password": "123456"
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
@@ -101,7 +111,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "duplicado@email.com",
-                                  "password": "123456"
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isCreated());
@@ -111,7 +121,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "email": "duplicado@email.com",
-                                  "password": "otra"
+                                  "password": "OtraClave1!"
                                 }
                                 """))
                 .andExpect(status().isConflict())
@@ -119,30 +129,32 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerShouldFailIfDataIsEmpty() throws Exception {
+    void registerShouldFailIfEmailFormatIsInvalid() throws Exception {
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "",
-                                  "password": ""
+                                  "email": "correo_mal",
+                                  "password": "Password1!"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Datos inválidos"));
+                .andExpect(jsonPath("$.error").value("Datos inválidos"))
+                .andExpect(jsonPath("$.details.email").exists());
     }
 
     @Test
-    void loginShouldFailIfDataIsEmpty() throws Exception {
-        mockMvc.perform(post("/auth/login")
+    void registerShouldFailIfPasswordIsWeak() throws Exception {
+        mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "",
-                                  "password": ""
+                                  "email": "test2@email.com",
+                                  "password": "1234"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Datos inválidos"));
+                .andExpect(jsonPath("$.error").value("Datos inválidos"))
+                .andExpect(jsonPath("$.details.password").exists());
     }
 }

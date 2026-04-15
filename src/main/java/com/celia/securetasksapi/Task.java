@@ -1,15 +1,22 @@
 package com.celia.securetasksapi;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "tasks")
 public class Task {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 120)
     private String title;
 
     public Task() {
     }
 
-    public Task(Long id, String title) {
-        this.id = id;
+    public Task(String title) {
         this.title = title;
     }
 
