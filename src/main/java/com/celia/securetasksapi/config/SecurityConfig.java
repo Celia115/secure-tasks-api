@@ -19,8 +19,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/register", "/auth/login", "/health").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/tasks/**").authenticated()
-                .anyRequest().authenticated()
+                //.requestMatchers("/tasks/**").authenticated()
+                //.anyRequest().authenticated()
             );
 
         return http.build();
