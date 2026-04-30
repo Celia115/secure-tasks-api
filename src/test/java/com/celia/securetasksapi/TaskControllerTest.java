@@ -1,6 +1,8 @@
 package com.celia.securetasksapi;
 
 import com.celia.securetasksapi.repository.TaskRepository;
+import com.celia.securetasksapi.repository.UserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +26,28 @@ class TaskControllerTest {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired 
+    private UserRepository userRepository;
+
     @BeforeEach
     void cleanDatabase() {
         taskRepository.deleteAll();
+        userRepository.deleteAll();
+
+        User admin = new User(
+                "test@example.com",
+                "password",
+                Role.ADMIN
+        );
+
+        userRepository.save(admin);
     }
 
     @Test
     void createTaskShouldWork() throws Exception {
         mockMvc.perform(post("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-User-Email", "test@example.com")
                         .content("""
                                 {
                                   "title": "Preparar entrega final"
@@ -59,6 +74,7 @@ class TaskControllerTest {
     void getTasksShouldReturnSavedTasksFromDatabase() throws Exception {
         mockMvc.perform(post("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-User-Email", "test@example.com")
                         .content("""
                                 {
                                   "title": "Crear endpoint tareas"
@@ -66,7 +82,8 @@ class TaskControllerTest {
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/tasks"))
+        mockMvc.perform(get("/tasks")
+                    .header("X-User-Email", "test@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Crear endpoint tareas"));
     }

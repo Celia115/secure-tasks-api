@@ -45,7 +45,7 @@ public class TaskController {
         }
 
         return userRepository.findByEmailIgnoreCase(emailHeader.trim())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
     }
 
     @GetMapping(
