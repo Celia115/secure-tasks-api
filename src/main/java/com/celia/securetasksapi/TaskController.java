@@ -2,6 +2,8 @@ package com.celia.securetasksapi;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.celia.securetasksapi.dto.TaskRequest;
 import com.celia.securetasksapi.repository.TaskRepository;
@@ -29,6 +29,8 @@ import jakarta.validation.Valid;
 public final class TaskController {
 
     private static final Logger log = LoggerFactory.getLogger(TaskController.class);
+    private static final String TASK_NOT_FOUND = "Tarea no encontrada";
+
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
@@ -69,7 +71,7 @@ public final class TaskController {
 
         if (currentUser.getRole() == Role.ADMIN) {
             return taskRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarea no encontrada"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TASK_NOT_FOUND));
         }
 
         return taskRepository.findByIdAndOwner(id, currentUser)
@@ -104,7 +106,7 @@ public final class TaskController {
 
         if (currentUser.getRole() == Role.ADMIN) {
             task = taskRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarea no encontrada"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TASK_NOT_FOUND));
         } else {
             task = taskRepository.findByIdAndOwner(id, currentUser)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes modificar esta tarea"));
@@ -128,7 +130,7 @@ public final class TaskController {
 
         if (currentUser.getRole() == Role.ADMIN) {
             task = taskRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarea no encontrada"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TASK_NOT_FOUND));
         } else {
             task = taskRepository.findByIdAndOwner(id, currentUser)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes borrar esta tarea"));
