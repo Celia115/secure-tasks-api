@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
-public final class AdminController {
+public class AdminController {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;

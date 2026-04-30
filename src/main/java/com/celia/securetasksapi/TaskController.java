@@ -26,7 +26,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/tasks")
-public final class TaskController {
+public class TaskController {
 
     private static final Logger log = LoggerFactory.getLogger(TaskController.class);
     private static final String TASK_NOT_FOUND = "Tarea no encontrada";

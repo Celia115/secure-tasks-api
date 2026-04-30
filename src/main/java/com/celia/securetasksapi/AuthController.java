@@ -24,7 +24,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/auth")
 @Validated
-public final class AuthController {
+public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final UserRepository userRepository;
