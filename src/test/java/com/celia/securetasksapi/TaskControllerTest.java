@@ -1,20 +1,21 @@
 package com.celia.securetasksapi;
 
-import com.celia.securetasksapi.repository.TaskRepository;
-import com.celia.securetasksapi.repository.UserRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.celia.securetasksapi.repository.TaskRepository;
+import com.celia.securetasksapi.repository.UserRepository;
+import com.celia.securetasksapi.security.JwtService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -26,28 +27,38 @@ class TaskControllerTest {
     @Autowired
     private TaskRepository taskRepository;
 
-    @Autowired 
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private String token;
 
     @BeforeEach
     void cleanDatabase() {
         taskRepository.deleteAll();
         userRepository.deleteAll();
 
-        User admin = new User(
+        User user = new User(
                 "test@example.com",
-                "password",
-                Role.ADMIN
+                passwordEncoder.encode("Password123!"),
+                Role.USER
         );
 
-        userRepository.save(admin);
+        userRepository.save(user);
+
+        token = jwtService.generateToken(user);
     }
 
     @Test
     void createTaskShouldWork() throws Exception {
         mockMvc.perform(post("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-User-Email", "test@example.com")
+                        .header("Authorization", "Bearer " + token)
                         .content("""
                                 {
                                   "title": "Preparar entrega final"
@@ -61,6 +72,7 @@ class TaskControllerTest {
     void createTaskShouldFailIfTitleHasDangerousCharacters() throws Exception {
         mockMvc.perform(post("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + token)
                         .content("""
                                 {
                                   "title": "DROP TABLE users;"
@@ -74,7 +86,7 @@ class TaskControllerTest {
     void getTasksShouldReturnSavedTasksFromDatabase() throws Exception {
         mockMvc.perform(post("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-User-Email", "test@example.com")
+                        .header("Authorization", "Bearer " + token)
                         .content("""
                                 {
                                   "title": "Crear endpoint tareas"
@@ -83,7 +95,7 @@ class TaskControllerTest {
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/tasks")
-                    .header("X-User-Email", "test@example.com"))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Crear endpoint tareas"));
     }
