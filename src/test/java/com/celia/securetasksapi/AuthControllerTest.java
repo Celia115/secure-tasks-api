@@ -1,6 +1,5 @@
 package com.celia.securetasksapi;
 
-import com.celia.securetasksapi.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +7,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.celia.securetasksapi.repository.TaskRepository;
+import com.celia.securetasksapi.repository.UserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -23,8 +24,12 @@ class AuthControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TaskRepository taskRepository;
+
     @BeforeEach
     void cleanDatabase() {
+        taskRepository.deleteAll();
         userRepository.deleteAll();
     }
 
