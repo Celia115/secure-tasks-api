@@ -1,12 +1,16 @@
 package com.celia.securetasksapi;
 
-import com.celia.securetasksapi.repository.TaskRepository;
-import com.celia.securetasksapi.repository.UserRepository;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import com.celia.securetasksapi.repository.TaskRepository;
+import com.celia.securetasksapi.repository.UserRepository;
 
 @RestController
 @RequestMapping("/admin")
@@ -20,13 +24,12 @@ public class AdminController {
         this.userRepository = userRepository;
     }
 
-    private User getCurrentUser(String emailHeader) {
-        if (emailHeader == null || emailHeader.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Falta cabecera X-User-Email");
+    private User getCurrentUser(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado");
         }
 
-        User user = userRepository.findByEmailIgnoreCase(emailHeader.trim())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+        User user = (User) authentication.getPrincipal();
 
         if (user.getRole() != Role.ADMIN) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo admin");
@@ -36,8 +39,8 @@ public class AdminController {
     }
 
     @GetMapping("/tasks")
-    public List<Task> getAllTasks(@RequestHeader("X-User-Email") String emailHeader) {
-        getCurrentUser(emailHeader);
+    public List<Task> getAllTasks(Authentication authentication) {
+        getCurrentUser(authentication);
         return taskRepository.findAll();
     }
 }

@@ -2,6 +2,8 @@ package com.celia.securetasksapi;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.celia.securetasksapi.dto.LoginRequest;
 import com.celia.securetasksapi.dto.RegisterRequest;
 import com.celia.securetasksapi.repository.UserRepository;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.celia.securetasksapi.security.JwtService;
 
 import jakarta.validation.Valid;
 
@@ -29,10 +29,12 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @PostMapping(
@@ -71,11 +73,18 @@ public class AuthController {
         return userRepository.findByEmailIgnoreCase(cleanEmail)
                 .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
                 .map(user -> {
+                    String token = jwtService.generateToken(user);
+
                     log.info("Login correcto para usuario: {}", cleanEmail);
-                    return ResponseEntity.ok(Map.of("message", "Login correcto"));
+                   
+                    return ResponseEntity.ok(Map.of(
+                    "message", "Login correcto",
+                    "token", token
+                    ));
                 })
                 .orElseGet(() -> {
                     log.warn("Intento de login fallido para usuario: {}", cleanEmail);
+                    
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(Map.of("error", "Credenciales inválidas"));
                 });
