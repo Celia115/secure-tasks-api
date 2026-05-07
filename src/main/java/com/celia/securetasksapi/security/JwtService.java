@@ -16,7 +16,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private static final String SECRET = "clave-super-secreta-de-minimo-32-caracteres";
-    private static final long EXPIRATION_MS = 1000 * 60 * 60; // 1 hora
+    private static final long EXPIRATION_MS = 1000L * 60 * 60; // 1 hora
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
